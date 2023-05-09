@@ -4,29 +4,23 @@ import shutil
 title_notify = "togglePad"
 
 def toggle_touchpad():
-    try:
-        # Intentar utilizar synclient
+    # Intentar utilizar synclient
+    
+    if check_tool_availability('synclient'):
+        toggle_touchpad_synclient()
+        exit(0)
         
-        if check_tool_availability('synclient'):
-            toggle_touchpad_synclient()
-            exit(0)
-            
-        # Intentar utilizar xinput
+    # Intentar utilizar xinput
+    
+    elif check_tool_availability('xinput'):
         
-        elif check_tool_availability('xinput'):
-            
-            toggle_touchpad_xinput()
-            exit(0)
-        '''
-        # Intentar utilizar libinput
-        if check_tool_availability('libinput'):
-            toggle_touchpad_libinput()
-            exit(0)
-        '''
-    except:
+        toggle_touchpad_xinput()
+        exit(0)
+
+    else:
         print("No se encontraron herramientas compatibles para toggle del touchpad.")
         print("Se necesita alguna de las siguientes herramientas:\n")
-        print("synclient, xinput o libinput")
+        print("synclient, xinput")
         exit(1)
 
 
@@ -34,18 +28,6 @@ def toggle_touchpad():
 def check_tool_availability(tool):
     # Torna un valor True si torna diferent de 'None'
     return shutil.which(tool) is not None
-
-# Usa 'libinput' per a fer el toggle del touchpad
-'''
-def toggle_touchpad_libinput():
-    print("Using 'libinput'")
-    # Executa el comando 'libinput debug-gui toggle-touchpad
-    subprocess.run(['libinput', 'debug-gui', 'toggle-touchpad'])
-    new_estate = touchpad_state()
-    message_notify = message_toggled(new_estate)  
-    notifying_state(title_notify, message_notify)      
-    print("Se utilizó libinput para toggle del touchpad.")
-'''
 
 def toggle_touchpad_synclient():
     print("Using 'synclient'")
@@ -92,7 +74,7 @@ def toggle_touchpad_xinput():
         # Es passa el nou estat al dispositiu a traves d'una funcio
         set_touchpad_state(touchpad_id, new_state)
         notifying_state(title_notify, message_notify)
-        print("toggle del touchpad realizado correctamente.")
+        print("Toggle del touchpad realizado correctamente.")
     else:
         print("No se encontró el ID del touchpad.")
 
@@ -100,25 +82,12 @@ def toggle_touchpad_xinput():
 def message_toggled(new_state):
     
     if new_state == 0:
-        message_notify = 'Enabled Touch Pad'
+        message_notify = 'Enabled TouchPad'
         return message_notify
     else:
-        message_notify = 'Disabled Touch Pad'
+        message_notify = 'Disabled TouchPad'
         return message_notify
-
-def touchpad_state():
-    resultado = subprocess.run(['libinput', 'list-devices', '--short'], capture_output=True, text=True)
-    lineas = resultado.stdout.split('\n')
-    for linea in lineas:
-        if 'Touchpad' in linea:
-            if 'disabled' in linea:
-                return 'Disabled'
-            else:
-                return 'Enabled'
-    return 'Unknown'
-
-        
-
+    
 def get_touchpad_id():
     # Es comproba la sortida del comando 'xinput --list'
     output = subprocess.check_output(['xinput', '--list'])
