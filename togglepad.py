@@ -8,21 +8,29 @@ icon = Image.open("/usr/share/icons/Adwaita/96x96/devices/input-touchpad-symboli
 
 title_notify = "TogglePad"
 click_button = "Toggle your Pad"
+init_state = 0
 
-def toggle_touchpad():
+def toggle_touchpad(init_state):
     # Intentar utilizar synclient
     
     if check_tool_availability('synclient'):
-        toggle_touchpad_synclient()
-        # exit(0)
-        
+        if init_state == 0:
+            current_state = check_touchpad_synclient()
+                       
+        else:
+            current_state = check_touchpad_synclient()
+            toggle_touchpad_synclient(current_state)    
     # Intentar utilizar xinput
     
     elif check_tool_availability('xinput'):
-        
-        toggle_touchpad_xinput()
-        # exit(0)
-
+        if init_state == 0:
+            touchpad_id = get_touchpad_id()
+            current_state = check_touchpad_xinput(touchpad_id)
+            
+        else:
+            touchpad_id = get_touchpad_id() 
+            current_state = check_touchpad_xinput(touchpad_id)
+            toggle_touchpad_xinput(current_state, touchpad_id)
     else:
         print("No se encontraron herramientas compatibles para toggle del touchpad.")
         print("Se necesita alguna de las siguientes herramientas:\n")
@@ -35,8 +43,8 @@ def check_tool_availability(tool):
     # Torna un valor True si torna diferent de 'None'
     return shutil.which(tool) is not None
 
-def toggle_touchpad_synclient():
-    print("Using 'synclient'")
+def check_touchpad_synclient():
+    print("Checking Status with 'synclient'")
     # Es captura la sortida del comandament 'synclient -l'
     # Aquesta sortida es en forma de bytes
     output = subprocess.check_output(['synclient', '-l'])
@@ -56,33 +64,40 @@ def toggle_touchpad_synclient():
             # Es converteix a 'int' el valor
             # i '.strip()' elimina els espais innecessaris
             current_state = int(line.split('=')[1].strip())
-            # Es canvia l'estat actual per un de nou
-            new_state = 1 - current_state
-            message_notify = message_toggled(new_state)
-            # Es torna a cridar al comandament 'synclient'
-            # i es canvia el valor antic pel nou 'new-state'
-            subprocess.call(['synclient', 'TouchpadOff={}'.format(new_state)])
-            notifying_state(title_notify, message_notify)
-            print('TouchpadOff = {}'.format(new_state))
+           
+            return current_state
             break
 
-def toggle_touchpad_xinput():
+def toggle_touchpad_synclient(current_state):
+    print("Toggling with 'synclient'")
+    new_state = 1 - current_state
+    message_notify = message_toggled(new_state)
+    # Es torna a cridar al comandament 'synclient'
+    # i es canvia el valor antic pel nou 'new-state'
+    subprocess.call(['synclient', 'TouchpadOff={}'.format(new_state)])
+    notifying_state(title_notify, message_notify)
+    print('TouchpadOff = {}'.format(new_state))
+
+
+def check_touchpad_xinput(touchpad_id):
     # Obtener el ID del touchpad
-    print("Using 'xinput'")
-    touchpad_id = get_touchpad_id()
+    print("Checking Status with 'xinput'")
+    
     if touchpad_id is not None:
         # Obtener el estado actual del touchpad
         current_state = get_touchpad_state(touchpad_id)
-        # Cambiar el valor del estado del touchpad
-        new_state = 1 if current_state == 0 else 0
-        message_notify = message_toggled(current_state)
-        
-        # Es passa el nou estat al dispositiu a traves d'una funcio
-        set_touchpad_state(touchpad_id, new_state)
-        notifying_state(title_notify, message_notify)
-        print("Toggle del touchpad realizado correctamente.")
+        return current_state        
     else:
         print("No se encontró el ID del touchpad.")
+
+def toggle_touchpad_xinput(current_state, touchpad_id):
+    # Cambiar el valor del estado del touchpad
+    new_state = 1 if current_state == 0 else 0
+    message_notify = message_toggled(current_state)
+    # Es passa el nou estat al dispositiu a traves d'una funcio
+    set_touchpad_state(touchpad_id, new_state)
+    notifying_state(title_notify, message_notify)
+    print("Toggle del touchpad realizado correctamente.")
 
 
 def message_toggled(new_state):
@@ -153,13 +168,15 @@ def notifying_state(title_notify, message_notify):
 
 # Define la función que se ejecutará cuando el usuario haga clic en el icono
 def on_clicked(icon, item):
-    toggle_touchpad()
-
-    print("¡Hiciste clic en el icono de la aplicación!")
+    init_state = 1
+    print(f"Estat {init_state}")
+    toggle_touchpad(init_state)
+    
 
 # Crea la aplicación de bandeja del sistema con el icono y el menú
 menu = pystray.Menu(pystray.MenuItem(f"{click_button}", on_clicked))
 tray = pystray.Icon("TogglePad", icon, "Mi aplicación", menu)
 
+toggle_touchpad(init_state)
 # Inicia la aplicación y muestra el icono en el área de notificación
 tray.run()
