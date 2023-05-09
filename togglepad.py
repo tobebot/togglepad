@@ -1,21 +1,27 @@
 import subprocess
 import shutil
+import pystray
+from PIL import Image
 
-title_notify = "togglePad"
+# Carga el icono para la aplicación
+icon = Image.open("/usr/share/icons/Adwaita/96x96/devices/input-touchpad-symbolic.symbolic.png")
+
+title_notify = "TogglePad"
+click_button = "Toggle your Pad"
 
 def toggle_touchpad():
     # Intentar utilizar synclient
     
     if check_tool_availability('synclient'):
         toggle_touchpad_synclient()
-        exit(0)
+        # exit(0)
         
     # Intentar utilizar xinput
     
     elif check_tool_availability('xinput'):
         
         toggle_touchpad_xinput()
-        exit(0)
+        # exit(0)
 
     else:
         print("No se encontraron herramientas compatibles para toggle del touchpad.")
@@ -145,4 +151,15 @@ def notifying_state(title_notify, message_notify):
         comando = ['kdialog', '--title', title_notify, '--passivepopup', message_notify]
         subprocess.run(comando)
 
-toggle_touchpad()
+# Define la función que se ejecutará cuando el usuario haga clic en el icono
+def on_clicked(icon, item):
+    toggle_touchpad()
+
+    print("¡Hiciste clic en el icono de la aplicación!")
+
+# Crea la aplicación de bandeja del sistema con el icono y el menú
+menu = pystray.Menu(pystray.MenuItem(f"{click_button}", on_clicked))
+tray = pystray.Icon("TogglePad", icon, "Mi aplicación", menu)
+
+# Inicia la aplicación y muestra el icono en el área de notificación
+tray.run()
