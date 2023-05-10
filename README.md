@@ -1,5 +1,3 @@
-Aquí tienes el README.md actualizado con una licencia GPL en lugar de la licencia MIT:
-
 ```markdown
 # Toggle Touchpad/Trackpad for Linux
 
@@ -9,7 +7,7 @@ This Python script allows you to toggle the touchpad/trackpad on your Linux lapt
 
 - Python 3.x
 - Linux operating system
-- Required packages: `xinput`, `libinput`, or `synclient` (depending on your system)
+- Required packages: `xinput`, or `synclient` (depending on your system)
 
 ## Installation
 
@@ -26,12 +24,6 @@ This Python script allows you to toggle the touchpad/trackpad on your Linux lapt
 
      ```bash
      sudo apt-get install xinput
-     ```
-
-   - For 'libinput':
-
-     ```bash
-     sudo apt-get install libinput-tools
      ```
 
    - For 'synclient':
@@ -66,5 +58,3 @@ Contributions are welcome! If you have any ideas, improvements, or bug fixes, fe
 
 This project is licensed under the [GPL License](LICENSE).
 ```
-
-Recuerda que siempre debes asegurarte de entender y cumplir con los términos y condiciones de la licencia que elijas utilizar.
